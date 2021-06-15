@@ -1,5 +1,7 @@
 # wifi
 
+## 这个库， 完全根据https://github.com/once10301/wifi 使用方式，跟原作者一样 修改的空安全，兼容2.0。如果需要2.0以下的，请到原作者git参考使用
+
 This plugin allows Flutter apps to get wifi ssid and list, connect wifi with ssid and password.
 
 This plugin works Android.
@@ -11,7 +13,7 @@ iOS later released.
 Sample usage to check current status:
 
 ```dart
-import 'package:wifi/wifi.dart';
+import 'package:wifi_null_safety/wifi_null_safety.dart';
 
 String ssid = await Wifi.ssid;
 
