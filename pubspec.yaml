@@ -1,6 +1,6 @@
 name: wifi_null_safety
 description: Flutter plugin providing WiFi.
-homepage: https://github.com/once10301/wifi_null_safety
+homepage: https://github.com/rongang/wifi_null_safety.git
 version: 0.2.0
 
 dependencies:
