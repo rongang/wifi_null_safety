@@ -1,55 +1,54 @@
 package com.ly.wifi;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 
-public class WifiPlugin implements MethodChannel.MethodCallHandler {
-    private final Registrar registrar;
-    private final WifiDelegate delegate;
+public class WifiPlugin implements FlutterPlugin, MethodCallHandler {
+    private WifiDelegate delegate;
+    private MethodChannel channel;
 
-    private WifiPlugin(Registrar registrar, WifiDelegate delegate) {
-        this.registrar = registrar;
-        this.delegate = delegate;
-    }
-
-    public static void registerWith(Registrar registrar) {
-        final MethodChannel channel = new MethodChannel(registrar.messenger(), "plugins.ly.com/wifi");
-        WifiManager wifiManager = (WifiManager) registrar.activeContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        final WifiDelegate delegate = new WifiDelegate(registrar.activity(), wifiManager);
-        registrar.addRequestPermissionsResultListener(delegate);
-
+    @Override
+    public void onAttachedToEngine(@NonNull FlutterPlugin.FlutterPluginBinding flutterPluginBinding) {
+        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "plugins.ly.com/wifi");
+        WifiManager wifiManager = (WifiManager) flutterPluginBinding.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        delegate = new WifiDelegate((Activity) flutterPluginBinding.getApplicationContext(), wifiManager);
         // support Android O,listen network disconnect event
         // https://stackoverflow.com/questions/50462987/android-o-wifimanager-enablenetwork-cannot-work
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        registrar
-                .context()
+        flutterPluginBinding.getApplicationContext()
                 .registerReceiver(delegate.networkReceiver, filter);
-
-        channel.setMethodCallHandler(new WifiPlugin(registrar, delegate));
+        channel.setMethodCallHandler(this);
     }
 
     @Override
-    public void onMethodCall(@Nullable MethodCall call, @Nullable MethodChannel.Result result) {
-        if (registrar.activity() == null) {
-            result.error("no_activity", "wifi plugin requires a foreground activity.", null);
-            return;
-        }
+    public void onDetachedFromEngine(@NonNull FlutterPlugin.FlutterPluginBinding flutterPluginBinding) {
+        channel.setMethodCallHandler(null);
+    }
+
+
+    @Override
+    public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         switch (call.method) {
             case "ssid":
                 delegate.getSSID(call, result);
                 break;
             case "level":
                 delegate.getLevel(call, result);
+                break;
+            case "is5GHz":
+                delegate.getIs5GHz(call, result);
                 break;
             case "ip":
                 delegate.getIP(call, result);
@@ -65,4 +64,5 @@ public class WifiPlugin implements MethodChannel.MethodCallHandler {
                 break;
         }
     }
+
 }

@@ -222,6 +222,30 @@ WifiDelegate implements PluginRegistry.RequestPermissionsResultListener {
         return freq > 4900 && freq < 5900;
     }
 
+    public void getIs5GHz(MethodCall methodCall, MethodChannel.Result result) {
+        if (!setPendingMethodCallAndResult(methodCall, result)) {
+            finishWithAlreadyActiveError();
+            return;
+        }
+        launchIs5GHZ();
+    }
+
+    public void launchIs5GHZ() {
+        NetworkInfo info = ((ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+        if (info != null && info.isConnected()) {
+            if (info.getType() == ConnectivityManager.TYPE_WIFI && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                result.success(is5GHz(wifiInfo.getFrequency()));
+                clearMethodCallAndResult();
+            } else {
+                finishWithError("unavailable", "Is5GHZ not available.");
+
+            }
+        } else {
+            finishWithError("unavailable", "Is5GHZ not available.");
+        }
+    }
+
     public void connection(MethodCall methodCall, MethodChannel.Result result) {
         if (!setPendingMethodCallAndResult(methodCall, result)) {
             finishWithAlreadyActiveError();

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
@@ -8,8 +9,30 @@ class Wifi {
   static const MethodChannel _channel =
       const MethodChannel('plugins.ly.com/wifi');
 
+  static Future<WifiResult> get currentWifi async {
+    if (Platform.isAndroid)
+      return WifiResult(
+        await ssid,
+        await level,
+        await bssid,
+        is5GHz: await is5GHz,
+      );
+    else if (Platform.isIOS)
+      return WifiResult(
+        await ssid,
+        3,
+        await bssid,
+      );
+    throw NoSuchMethodError;
+  }
+
   static Future<String> get ssid async {
     return await _channel.invokeMethod('ssid');
+  }
+
+  static Future<bool> get is5GHz async {
+    if (Platform.isAndroid) return await _channel.invokeMethod('is5GHz');
+    throw NoSuchMethodError;
   }
 
   static Future<String> get bssid async {
@@ -17,7 +40,8 @@ class Wifi {
   }
 
   static Future<int> get level async {
-    return await _channel.invokeMethod('level');
+    if (Platform.isAndroid) return await _channel.invokeMethod('level');
+    throw NoSuchMethodError;
   }
 
   static Future<String> get ip async {
